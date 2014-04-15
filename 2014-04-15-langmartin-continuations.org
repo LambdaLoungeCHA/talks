@@ -1,4 +1,4 @@
-#+TITLE:  Wound Tight
+#+TITLE:  Wound Tight^{\ \beta}
 #+AUTHOR: Lang Martin
 #+EMAIL:  lang@halfadder.net
 #+DATE:   [2014-04-15 Tue] Lambda Lounge CHA #2
@@ -20,7 +20,7 @@ convince manufacturers to build the ideas into hardware. Early
 hardware had wired programs and parameters; random access memory was a
 scheme to late-bind them. Looping and indexing used to be done by
 address modification in storiage; index registers were a way to
-late-bind.\\
+late-bind.\\~\\
 ---Alan Kay, ``The Early History of Smalltalk''
 
 * The Call Stack
@@ -29,17 +29,13 @@ late-bind.\\
 Representative of everything except Forth (and so forth) and Prolog
 and it's siblings (maybe?).
 
-+ Variable Bindings
-+ =return= Address
-+ Exception Handling
++ Local variable bindings
++ =return= address
++ Exceptions
 
-Composed by the interpreter and opaque to the program.
+The mechanism that supports procedural programming.
 
 ** Closures Capture Part of the Stack
-
-The call stack provides the context to execute code arranged in
-procedures, so it is the mechanism for assigning local variable
-binding storage.
 
 Return a procedure from a local binding context, and it will keep
 (often by copying to some part of the heap) context from that inner
@@ -48,12 +44,10 @@ environment.
 ** Callbacks
 
 JavaScript doesn't provide a mechanism for capturing the =return=
-address, so (in node, e.g.) we don't return from a procedure. We
-write our procedures in the form of callbacks.
-
-Each line of code is encapsulated in it's own anonymous procedure
-which captures the local variable scope and expects a standard async
-parameter interface.
+address, so (in node, e.g.) we don't return from a procedure. We write
+our procedures in the form of callbacks.\\~\\
+Each line of code is encapsulated in it's own procedure which captures
+the local variable scope and expects an async parameter interface.
 
 ** The Error Parameter
 
@@ -70,10 +64,10 @@ return value as the second.
       [login,
        getCounters,
        first,
-       incCounter,
-       putCounter],
-      function( result ) {
-          doSomething(result);
+       inc,
+       pushCounter],
+      function(result) {
+          console.log(result);
       });
 #+end_src
 
@@ -82,13 +76,13 @@ return value as the second.
 #+begin_src js2
   function begin (handler, expr, callback, res) {
       if (expr.length === 0) return callback(res);
-      var fn = expr[0], ra = expr.slice(1),
-      retry = function() {
-          begin(handler, expr, callback, res);
-      },
-      cont = function( err, res ) {
+      var fn = expr[0], rest = expr.slice(1),
+          retry = function() {
+              begin(handler, expr, callback, res);
+          },
+      cont = function(err, res) {
           if (err) handler(err, retry);
-          else begin(handler, ra, callback, res);
+          else begin(handler, rest, callback, res);
       };
       try {
           res = fn(res, cont);
@@ -99,9 +93,8 @@ return value as the second.
 
 ** Return Address
 
-The return address is free, because we can expect procedures to
-adhere to the node interface and accept a callback.
-
++ The return address is free, because we can expect procedures to
+  adhere to the node interface and accept a callback
 + Gambit Scheme and continuation passing style
 + Chicken Scheme and copying the stack to the heap
 
@@ -109,18 +102,17 @@ adhere to the node interface and accept a callback.
 
 The error handler is invoked for synchronous expressions by the try
 catch block, and for async procedures by the node protocol for
-handling the first callback argument.
-
+handling the first callback argument.\\~\\
 The second argument to the error handler supports "retry", the handler
-can prompt the user, say, and then invoke the procedure to retry the
-step with the same parameters.
+can prompt the user, say, and then invoke the retry thunk to resume
+the program in the same place.
 
 ** Wiggles
 
 + A stack trace contains outer context from the development
   environment that isn't part of your program
 + Also, inner context that's from a different module of your program
-+ Tagged, delimited continuations
++ The solution: tagged, delimited continuations
 
 * New Things
 ** New Things: Inversion of Control
@@ -136,8 +128,8 @@ step with the same parameters.
 + Batching requests
 + Retry on error
 + Progress reports
-
-Leaving control with the consumer keeps the application code legible.
++ Leaving control with the consumer keeps the application code
+  legible.
 
 * Prior Art
 ** Prior Art: REST
