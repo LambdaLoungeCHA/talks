@@ -19,7 +19,7 @@ been about finding ways to late-bind, then waging campaigns to
 convince manufacturers to build the ideas into hardware. Early
 hardware had wired programs and parameters; random access memory was a
 scheme to late-bind them. Looping and indexing used to be done by
-address modification in storiage; index registers were a way to
+address modification in storage; index registers were a way to
 late-bind.\\~\\
 ---Alan Kay, ``The Early History of Smalltalk''
 
@@ -27,7 +27,7 @@ late-bind.\\~\\
 ** The Call Stack (in JavaScript)
 
 Representative of everything except Forth (and so forth) and Prolog
-and it's siblings (maybe?).
+and its siblings (maybe?).
 
 + Local variable bindings
 + =return= address
@@ -46,7 +46,7 @@ environment.
 JavaScript doesn't provide a mechanism for capturing the =return=
 address, so (in node, e.g.) we don't return from a procedure. We write
 our procedures in the form of callbacks.\\~\\
-Each line of code is encapsulated in it's own procedure which captures
+Each line of code is encapsulated in its own procedure which captures
 the local variable scope and expects an async parameter interface.
 
 ** The Error Parameter

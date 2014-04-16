@@ -4,10 +4,10 @@ function begin (handler, expr, callback, res) {
 		retry = function() {
 			begin(handler, expr, callback, res);
 		},
-    cont = function(err, res) {
-        if (err) handler(err, retry);
-        else begin(handler, rest, callback, res);
-    };
+		cont = function(err, res) {
+			if (err) handler(err, retry);
+			else begin(handler, rest, callback, res);
+		};
     try {
         res = fn(res, cont);
         if (res !== undefined) cont(null, res);
