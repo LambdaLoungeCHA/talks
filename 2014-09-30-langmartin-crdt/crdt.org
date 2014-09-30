@@ -1,0 +1,34 @@
+[[file:feeling-lucky.jpg]]
+
+
+* The Problem
+
++ Safety (nothing bad happens) vs.
++ Liveliness (something good happens evenutally)
++ CAP
+
+
+* Solutions?
+
++ Consistent databases
++ Clusters and failover
++ Eventually consistent databases
++ Leader election, majority wins, etc.
+
+http://aphyr.com/tags/jepsen
+
+
+* CRDTs
+
++ Idempotent
++ Commutative
+
+
+* A Operational Commutative Map
+
+I'm still learning! I think this implementation is correct and
+inefficient, but it might be wrong :(
+
++ Last Writer Wins eventually
++ Read the highest value in the meantime
++ Writers in a fixed priority
