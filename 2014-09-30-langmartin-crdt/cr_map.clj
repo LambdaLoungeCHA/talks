@@ -5,12 +5,12 @@
 
 ;;; The over the wire update format
 ;;;
-;;; - Identifies the map by name, so the receiver can retrieve the
-;;;   cached value from its local store
-;;; - Contains a map of changes
+;;; - Identifies the map by name
+;;;
 ;;; - Is marked with the new highest major version number
+;;;
 ;;; - Is tagged with the minor version number, an orderable bit of
-;;;   stuff that identifies the writer.
+;;;   stuff that identifies the writer
 
 (declare cr-map-id cr-major)
 (def ^:dynamic creator-key "a")
@@ -56,7 +56,7 @@
 
 ;;; Apply an update to a local cr-map
 ;;;
-;;; - A functional update, this returns a new, larger cr-map
+;;; - A functional update, this returns a new cr-map
 
 (defn cr-apply
   [map {:keys [val maj min] :as update}]
@@ -69,7 +69,6 @@
 ;;; Deletion uses a tombstone
 ;;;
 ;;; - Top secret control values are a bad idea
-;;; - A separate deletion dictionary in the update is a
 
 (def tombstone [0xDEADBEEF])
 (defn tombstone? [x] (= x tombstone))
@@ -89,6 +88,7 @@
 ;;; Get traverses a cr-map
 ;;;
 ;;; - Later versions hide values from earlier versions
+;;;
 ;;; - Higher minor versions win in a major version
 
 (declare rev-contains)
@@ -138,7 +138,11 @@
   (def p3 (cr-update foo :b 3))
   (def bar (cr-apply foo p3))
 
-  (is (identical? bar (-> bar (cr-apply p3) (cr-apply p3)))))
+  (is (identical?
+       bar
+       (-> bar
+           (cr-apply p3)
+           (cr-apply p3)))))
 
 
 ;;; Associtive
@@ -170,3 +174,13 @@
          (ap foo p3 p5 p4 p6 p8 p7)
          (ap (ap foo p5 p3 p4) p8 p6 p7)
          (ap (ap foo p6 p3 p7) p8 p5 p4 p3 p3 p3))))
+
+
+;;; Some Final Thoughts
+;;;
+;;; - CRDTs in general don't preserve causality, just assert a total
+;;;   order across writers
+;;;
+;;; - Compare to git (or cons cells)
+;;;
+;;; - Tradeoff supports reading the best answer now

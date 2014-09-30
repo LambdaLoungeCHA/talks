@@ -1,6 +1,3 @@
-[[file:feeling-lucky.jpg]]
-
-
 * The Problem
 
 + Safety (nothing bad happens) vs.
@@ -18,13 +15,41 @@
 http://aphyr.com/tags/jepsen
 
 
+[[file:feeling-lucky.jpg]]
+
+
 * CRDTs
 
 + Idempotent
++ Associative
 + Commutative
 
+#+begin_src js
+  {
+      type: "pn-counter",
+      pos: {
+          a: 2, b: 4, c: 5
+      },
+      neg: {
+          a: 1
+      }
+  }
+#+end_src
+
+2 + 4 + 5 + -1
+
 
-* A Operational Commutative Map
+* CRDT Papers and Implementations
+
++ http://pagesperso-systeme.lip6.fr/Marc.Shapiro/papers/RR-6956.pdf
++ http://muratbuffalo.blogspot.com/2013/04/conflict-free-replicated-data-types.html
++ https://github.com/aphyr/meangirls
+
++ State (counter)
++ Operational (TreeDoc)
+
+
+* An Operational Commutative Map
 
 I'm still learning! I think this implementation is correct and
 inefficient, but it might be wrong :(
