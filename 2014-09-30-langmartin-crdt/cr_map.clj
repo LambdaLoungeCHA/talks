@@ -2,6 +2,22 @@
   (:use
    clojure.test))
 
+;;; Not a slide, just some odds and ends
+
+(def number-desc
+  (comparator (fn [n m] (> n m))))
+
+(defn first-key [map] (first (first map)))
+(defn first-val [map] (second (first map)))
+
+(def ^:dynamic creator-key "a")
+(defmacro as-creator
+  [c & body]
+  `(binding [creator-key ~c]
+     ~@body))
+
+(declare cr-map-id cr-major)
+
 
 ;;; The over the wire update format
 ;;;
@@ -11,10 +27,6 @@
 ;;;
 ;;; - Is tagged with the minor version number, an orderable bit of
 ;;;   stuff that identifies the writer
-
-(declare cr-map-id cr-major)
-(def ^:dynamic creator-key "a")
-(defmacro with-c [c & body] `(binding [creator-key ~c] ~@body))
 
 (defn cr-update
   [map & kvs]
@@ -33,17 +45,15 @@
 ;;; - cr-map is an ordered (descending) map of major versions
 ;;; - revision is an ordered map of creator tag to update value
 
-(def number-desc (comparator (fn [n m] (> n m))))
-
 (defn cr-map
   [id]
-  (-> (sorted-map-by number-desc)
-      (with-meta {:id id})))
+  (with-meta
+    (sorted-map-by number-desc)
+    {:id id}))
 
-(defn cr-map-id [map] (:id (meta map)))
-
-(def first-key ffirst)
-(def first-val (comp second first))
+(defn cr-map-id
+  [map]
+  (get (meta map) :id))
 
 (defn cr-major
   [map]
@@ -59,11 +69,12 @@
 ;;; - A functional update, this returns a new cr-map
 
 (defn cr-apply
-  [map {:keys [val maj min] :as update}]
-  (assoc map
-    maj
-    (assoc (cr-get-rev map maj)
-      min val)))
+  [map update]
+  (let [{val :val maj :maj min :min} update]
+    (assoc map
+      maj
+      (assoc (cr-get-rev map maj)
+        min val))))
 
 
 ;;; Deletion uses a tombstone
@@ -121,28 +132,31 @@
 
 ;;; It's a map!
 
-(deftest test-mappiness
-  (def foo
-    (-> (cr-map "foo")
-        (cr-assoc :a 1 :b 2)))
+(def foo (cr-assoc (cr-map "foo") :a 1 :b 2))
+(def p1  (cr-update foo :b 1))
+(def p2  (as-creator "b" (cr-update foo :b 2)))
+(def bar (cr-apply foo p1))
+(def p3  (cr-update bar :b 3))
+(def p4  (as-creator "b" (cr-update bar :b 4)))
+(def p5  (as-creator "c" (cr-update bar :b 5)))
 
+(deftest test-mappiness
   (is (= (cr-get foo :a) 1))
   (is (= (cr-get foo :b) 2))
-  (is (= 2  (-> (cr-assoc foo :a 2) (cr-get :a))))
-  (is (nil? (-> (cr-dissoc foo :a)  (cr-get :a)))))
+  (is (= 2  (cr-get (cr-assoc foo :a 2) :a)))
+  (is (nil? (cr-get (cr-dissoc foo :a)  :a))))
 
 
 ;;; Idempotent
 
 (deftest test-idempotency
-  (def p3 (cr-update foo :b 3))
-  (def bar (cr-apply foo p3))
+  (is (identical?
+       bar
+       (cr-apply bar p1)))
 
   (is (identical?
        bar
-       (-> bar
-           (cr-apply p3)
-           (cr-apply p3)))))
+       (cr-apply (cr-apply bar p1) p1))))
 
 
 ;;; Associtive
@@ -150,30 +164,24 @@
 (defn ap [m & ps] (reduce cr-apply m ps))
 
 (deftest test-associtivity
-  (def p4 (cr-update bar :b 4))
-  (def p5 (with-c "b" (cr-update bar :b 5)))
-  (def p6 (with-c "c" (cr-update bar :c 6)))
-
-  (is (= (ap (ap bar p4 p5) p6)
-         (ap (ap bar p4) p5 p6))))
+  (is (= (ap (ap bar p3 p4) p5)
+         (ap (ap bar p3) p4 p5))))
 
 
 ;;; Commutative
 
 (deftest test-commutivity
-  (def baz (ap bar p4 p5 p6))
+  (is (= (ap foo p1 p2)
+         (ap foo p2 p1)))
 
-  (def p7 (cr-update baz :b 7))
-  (def p8 (with-c "b" (cr-delete baz :b)))
+  (is (= (ap foo p1 p5)
+         (ap foo p5 p1)))
 
-  (is (= (ap baz p7 p8)
-         (ap baz p8 p7)))
-
-  (is (= (ap foo p8 p7 p6 p5 p4 p3)
-         (ap foo p3 p4 p5 p6 p7 p8)
-         (ap foo p3 p5 p4 p6 p8 p7)
-         (ap (ap foo p5 p3 p4) p8 p6 p7)
-         (ap (ap foo p6 p3 p7) p8 p5 p4 p3 p3 p3))))
+  (is (= (ap foo p1 p2 p3 p4 p5)
+         (ap foo p5 p4 p3 p2 p1)
+         (ap foo p3 p5 p4 p1 p2)
+         (ap (ap foo p5 p3 p4) p1 p2)
+         (ap foo p3 p2 p1 p5 p4 p3 p3 p3))))
 
 
 ;;; Some Final Thoughts
