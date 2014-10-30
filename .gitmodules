@@ -1,0 +1,3 @@
+[submodule "2014-10-28-keathley-quick-check"]
+	path = 2014-10-28-keathley-quick-check
+	url = git@github.com:keathley/quick-check-talk.git
